@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-your_path = "Plot/"  # example of path
+your_path = "../Plot/"  # example of path
 
 
 def mean(results_all):
