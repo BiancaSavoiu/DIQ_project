@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from E_plot_results import mean, distance, speed, your_path
+from library.E_plot_results import mean, distance, speed, your_path
 
 
 def pollute_data_mcar(data, percent_incomplete=0.2, seed=2023):
