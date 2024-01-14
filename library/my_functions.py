@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from library.E_plot_results import mean, distance, speed, your_path
+from library.E_plot_results import generateFigurePerformance, generateFigureDistance, generateFigureSpeed
 
 
 def pollute_data_mcar(data, percent_incomplete=0.2, seed=2023):
@@ -68,97 +68,19 @@ def zoomed_plot(x_axis_values, x_label, results, title, algorithms, plot_type, z
     None
     """
     title = str(title)
+    plt.ylim(zoom['min'], zoom['max'])  # if you want to fix a limit for the y_axis
 
     if plot_type == "performance":
         if algorithms[0] == "LinearRegressor":
-            generate_figure_performance(x_axis_values, results, algorithms, "RMSE")
+            generateFigurePerformance(x_axis_values, x_label, results, title, algorithms, "RMSE")
         else:
-            generate_figure_performance(x_axis_values, results, algorithms, "silhouette")
+            generateFigurePerformance(x_axis_values, x_label, results, title, algorithms, "silhouette")
 
     elif plot_type == "distance train-test":
-        generate_figure_distance(x_axis_values, results, algorithms, "RMSE_test - RMSE_train")
+        generateFigureDistance(x_axis_values, x_label, results, title, algorithms, "RMSE_test - RMSE_train")
 
     else:
-        generate_figure_speed(x_axis_values, results, algorithms, "speed")
-
-    plt.title(title)
-    plt.xlabel(x_label)
-    plt.legend()
-    plt.ylim(zoom['min'], zoom['max'])  # if you want to fix a limit for the y_axis
-    plt.savefig(your_path + title + ".pdf", bbox_inches='tight')  # if you want to save the figure
-    plt.show()
-
-
-def generate_figure_performance(x_axis, results_all, legend, score):
-    """
-    This function generates the performance plot.
-
-    Parameters
-    ----------
-    x_axis : list
-        The list of x-axis values.
-    results_all : list
-        The list of results.
-    legend : list
-        The list of legend names.
-    score : str
-        The score to be plotted.
-
-    Returns
-    -------
-    None
-    """
-    for i in range(0, len(results_all)):
-        plt.plot(x_axis, mean(results_all[i]), marker='o', label=legend[i], markersize=3)
-    plt.ylabel(score)
-
-
-def generate_figure_distance(x_axis, results_all, legend, score):
-    """
-    This function generates the distance plot.
-
-    Parameters
-    ----------
-    x_axis : list
-        The list of x-axis values.
-    results_all : list
-        The list of results.
-    legend : list
-        The list of legend names.
-    score : str
-        The score to be plotted.
-
-    Returns
-    -------
-    None
-    """
-    for i in range(0, len(results_all)):
-        plt.plot(x_axis, distance(results_all[i]), marker='o', label=legend[i], markersize=3)
-    plt.ylabel(score)
-
-
-def generate_figure_speed(x_axis, results_all, legend, score):
-    """
-    This function generates the speed plot.
-
-    Parameters
-    ----------
-    x_axis : list
-        The list of x-axis values.
-    results_all : list
-        The list of results.
-    legend : list
-        The list of legend names.
-    score : str
-        The score to be plotted.
-
-    Returns
-    -------
-    None
-    """
-    for i in range(0, len(results_all)):
-        plt.plot(x_axis, speed(results_all[i]), marker='o', label=legend[i], markersize=3)
-    plt.ylabel(score)
+        generateFigureSpeed(x_axis_values, x_label, results, title, algorithms, "speed")
 
 
 def zoom_data(results, attribute):
