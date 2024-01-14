@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from library.E_plot_results import generateFigurePerformance, generateFigureDistance, generateFigureSpeed
+from library.E_plot_results import generateFigurePerformance, generateFigureDistance, generateFigureSpeed, plot
 
 
 def pollute_data_mcar(data, percent_incomplete=0.2, seed=2023):
@@ -67,20 +67,8 @@ def zoomed_plot(x_axis_values, x_label, results, title, algorithms, plot_type, z
     -------
     None
     """
-    title = str(title)
     plt.ylim(zoom['min'], zoom['max'])  # if you want to fix a limit for the y_axis
-
-    if plot_type == "performance":
-        if algorithms[0] == "LinearRegressor":
-            generateFigurePerformance(x_axis_values, x_label, results, title, algorithms, "RMSE")
-        else:
-            generateFigurePerformance(x_axis_values, x_label, results, title, algorithms, "silhouette")
-
-    elif plot_type == "distance train-test":
-        generateFigureDistance(x_axis_values, x_label, results, title, algorithms, "RMSE_test - RMSE_train")
-
-    else:
-        generateFigureSpeed(x_axis_values, x_label, results, title, algorithms, "speed")
+    plot(x_axis_values, x_label, results, title, algorithms, plot_type)
 
 
 def zoom_data(results, attribute):
