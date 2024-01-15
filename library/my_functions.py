@@ -2,7 +2,41 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from library.E_plot_results import generateFigurePerformance, generateFigureDistance, generateFigureSpeed, plot
+from library.E_plot_results import plot
+
+
+def pollute_data_with_constant_feature(data, percentage, seed=2023):
+    """
+    Take a random column and copy its first value in a percentage of the remaining rows, in a random way.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame.
+    percentage : float
+        The percentage of constant feature to be introduced in the DataFrame.
+    seed : int
+        Determines random number generation for dataset creation. Pass an int for reproducible output across multiple
+        function calls.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The input DataFrame with a constant feature.
+    """
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    random_col = np.random.randint(data.shape[1])
+
+    # Take a random column and copy its first value in a percentage of the remaining rows, in a random way
+    data.iloc[np.random.choice(data.index, int(data.shape[0] * percentage)), random_col] = data.iloc[0, random_col]
+
+    return data
 
 
 def pollute_data_mcar(data, percent_incomplete=0.2, seed=2023):
