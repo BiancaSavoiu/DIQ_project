@@ -75,6 +75,108 @@ def pollute_data_mcar(data, percent_incomplete=0.2, seed=2023):
     return data
 
 
+def pollute_data_mcar_for_each_feature_in_incremental_way(data, seed=2023):
+    """
+    Generate a random mask for incompleteness (MCAR) and introduce NaN values in the DataFrame according to the
+    generated mask. The NaN values are introduced for each feature in an incremental way. For example, for a DataFrame
+    with 10 features, the first feature will have 10% of missing values, the second feature will have 20% of missing
+    values, and so on.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame.
+    seed : int
+        Determines random number generation for dataset creation. Pass an int
+        for reproducible output across multiple function calls.
+    """
+
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # Generate a random mask for incompleteness (MCAR)
+    for col in data.columns:
+        pollute_data_mcar_for_one_feature(data=data, feature=col, percent_incomplete=(col * 10))
+
+
+def pollute_data_mcar_for_one_feature(data, feature, percent_incomplete=0.2, seed=2023):
+    """
+    Generate a random mask for incompleteness (MCAR) and introduce NaN values in the DataFrame according to the
+    generated mask. The NaN values are introduced only for the chosen feature.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame.
+    feature : int
+        The feature for which NaN values are introduced, identified by the number of the column.
+    percent_incomplete : float
+        The percentage of missing values to be introduced in the DataFrame.
+    seed : int
+        Determines random number generation for dataset creation. Pass an int
+        for reproducible output across multiple function calls.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The input DataFrame with NaN values introduced according to the generated mask.
+    """
+
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # Generate a random mask for incompleteness (MCAR), introducing NaN values only for one feature
+    mask = np.random.rand(*data[feature].shape) < percent_incomplete
+
+    # MCAR experiment: introduce NaN values in the DataFrame according to the generated mask
+    data[feature][mask] = np.nan
+
+    return data
+
+
+def pollute_data_mnar(data, feature_referenced, feature_dependent, seed=2023):
+    """
+    Generate a random mask for incompleteness (MNAR) and introduce NaN values in the DataFrame according to the
+    generated mask.
+    Introduce missing values in a way that depends on the values of specific features.
+    Simulate a non-random incompleteness pattern based on the values of certain features.
+    For example only if a column has a certain range of values for a value then modify the correspondent completeness
+    of another column referring to the value.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame.
+    feature_referenced : int
+        The feature for which we check a certain condition, to modify the completeness of another feature.
+    feature_dependent : int
+        The feature for which NaN values are introduced, identified by the number of the column.
+    seed : int
+        Determines random number generation for dataset creation. Pass an int
+        for reproducible output across multiple function calls.
+    """
+
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # Simulate a non-random incompleteness pattern based on the values of certain features
+    for element in data.index:
+        if data[feature_referenced][element] > 100:
+            data[feature_dependent][element] = np.nan
+
+
 def zoomed_plot(x_axis_values, x_label, results, title, algorithms, plot_type, zoom):
     """
     This function generates the plots for the results of the experiments. It is possible to zoom the y-axis in order to
