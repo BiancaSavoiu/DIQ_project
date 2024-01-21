@@ -177,6 +177,42 @@ def pollute_data_mnar(data, feature_referenced, feature_dependent, seed=2023):
             data[feature_dependent][element] = np.nan
 
 
+def plot_results(x_axis_values, x_label, results, title, algorithms, cleaned_data=False):
+    if cleaned_data:
+        title_plot = title + ' - Cleaned regression '
+        title_zoom = title + ' - Zoomed cleaned regression '
+    else:
+        title_plot = title + ' - Trial regression '
+        title_zoom = title + ' - Zoomed trial regression '
+
+    plot(
+        x_axis_values=x_axis_values, x_label=x_label, results=results, title=title_plot + 'performance',
+        algorithms=algorithms, plot_type='performance'
+    )
+    zoomed_plot(
+        x_axis_values=x_axis_values, x_label=x_label, results=results, title=title_zoom + 'performance',
+        algorithms=algorithms, plot_type='performance', zoom=zoom_data(results, 'mean_perf')
+    )
+
+    plot(
+        x_axis_values=x_axis_values, x_label=x_label, results=results, title=title_plot + 'distance train-test',
+        algorithms=algorithms, plot_type='distance train-test'
+    )
+    zoomed_plot(
+        x_axis_values=x_axis_values, x_label=x_label, results=results, title=title_zoom + 'distance train-test',
+        algorithms=algorithms, plot_type='distance train-test', zoom=zoom_data(results, 'distance')
+    )
+
+    plot(
+        x_axis_values=x_axis_values, x_label=x_label, results=results, title=title_plot + 'speed',
+        algorithms=algorithms, plot_type='speed'
+    )
+    zoomed_plot(
+        x_axis_values=x_axis_values, x_label=x_label, results=results, title=title_zoom + 'speed',
+        algorithms=algorithms, plot_type='speed', zoom=zoom_data(results, 'speed')
+    )
+
+
 def zoomed_plot(x_axis_values, x_label, results, title, algorithms, plot_type, zoom):
     """
     This function generates the plots for the results of the experiments. It is possible to zoom the y-axis in order to
