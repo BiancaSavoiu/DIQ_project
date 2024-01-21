@@ -5,6 +5,43 @@ from matplotlib import pyplot as plt
 from library.E_plot_results import plot
 
 
+def pollute_data_for_distinctness_issues_among_different_features(data, percentage, seed=2023):
+    """
+    Take a random column and copy its first value in a percentage of the remaining rows, in a random way.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame.
+    percentage : float
+        The percentage of constant feature to be introduced in the DataFrame.
+    seed : int
+        Determines random number generation for dataset creation.
+        Pass an int for reproducible output across multiple function calls.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The input DataFrame with a constant feature.
+    """
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas DataFrame")
+
+    # Select the half plus one of the columns in a random way
+    columns = np.random.choice(data.columns, data.shape[1] // 2 + 1)
+
+    # From each of the selected columns, chose a random row and copy its value in a percentage of the remaining rows
+    for column in columns:
+        data.iloc[np.random.choice(data.index, int(data.shape[0] * column * percentage)), column] = data.iloc[0, column]
+
+    # Return the polluted DataFrame
+    return data
+
+
 def pollute_data_with_constant_feature(data, percentage, seed=2023):
     """
     Take a random column and copy its first value in a percentage of the remaining rows, in a random way.
@@ -148,7 +185,7 @@ def pollute_data_mnar(data, feature_referenced, feature_dependent, seed=2023):
     generated mask.
     Introduce missing values in a way that depends on the values of specific features.
     Simulate a non-random incompleteness pattern based on the values of certain features.
-    For example only if a column has a certain range of values for a value then modify the correspondent completeness
+    For example, only if a column has a certain range of values for a value then modify the correspondent completeness
     of another column referring to the value.
 
     Parameters
@@ -178,6 +215,29 @@ def pollute_data_mnar(data, feature_referenced, feature_dependent, seed=2023):
 
 
 def plot_results(x_axis_values, x_label, results, title, algorithms, cleaned_data=False):
+    """
+    This function generates the plots for the results of the experiments.
+
+    Parameters
+    ----------
+    x_axis_values : list
+        The list of x-axis values.
+    x_label : str
+        The label of the x-axis.
+    results : list
+        The list of results.
+    title : str
+        The title of the plot.
+    algorithms : list
+        The list of algorithms.
+    cleaned_data : bool
+        If True, the plots are generated for the cleaned data.
+        If False, the plots are generated for the trial data.
+
+    Returns
+    -------
+    None
+    """
     if cleaned_data:
         title_plot = title + ' - Cleaned regression '
         title_zoom = title + ' - Zoomed cleaned regression '
@@ -215,8 +275,8 @@ def plot_results(x_axis_values, x_label, results, title, algorithms, cleaned_dat
 
 def zoomed_plot(x_axis_values, x_label, results, title, algorithms, plot_type, zoom):
     """
-    This function generates the plots for the results of the experiments. It is possible to zoom the y-axis in order to
-    have a better visualization of the results.
+    This function generates the plots for the results of the experiments.
+    It is possible to zoom the y-axis to have a better visualization of the results.
 
     Parameters
     ----------
@@ -245,8 +305,9 @@ def zoomed_plot(x_axis_values, x_label, results, title, algorithms, plot_type, z
 
 def zoom_data(results, attribute):
     """
-    This function zooms the y-axis of the plots. It removes the values from attributes far away the median of the values
-    inside attributes. It returns a dictionary containing the maximum and minimum values of the zoomed y-axis.
+    This function zooms the y-axis of the plots.
+    It removes the values from attributes far away from the median of the values inside attributes.
+    It returns a dictionary containing the maximum and minimum values of the zoomed y-axis.
 
     Parameters
     ----------
