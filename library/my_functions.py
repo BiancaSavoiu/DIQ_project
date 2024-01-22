@@ -38,7 +38,6 @@ def pollute_most_important_features(X, y, percentage, seed=2023):
 
     return X
 
-
 def pollute_less_important_features(X, y, percentage, seed=2023):
     # Split the dataset into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
