@@ -114,7 +114,9 @@ def pollute_data_for_distinctness_issues_among_different_features(data, percenta
 
     # From each of the selected columns, chose a random row and copy its value in a percentage of the remaining rows
     for column in columns:
-        data.iloc[np.random.choice(data.index, int(data.shape[0] * column * percentage)), column] = data.iloc[0, column]
+        data.iloc[
+            np.random.choice(data.index, int(data.shape[0] * percentage * (1 + np.random.random() / 4))), column
+        ] = data.iloc[0, column]
 
     # Return the polluted DataFrame
     return data
