@@ -3,9 +3,70 @@ import random
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
 
 from library.E_plot_results import plot
 
+
+def pollute_most_important_features(X, y, percentage, seed=2023):
+    # Split the dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
+
+    # Train a regression model (Random Forest, for example)
+    model = RandomForestRegressor(random_state=seed)
+    model.fit(X_train, y_train)
+
+    # Get feature importance scores
+    importance = model.feature_importances_
+
+    #Order features by importance
+    feature_importance = sorted(zip(importance, range(X.shape[1])), reverse=True)
+
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(X, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # Introduce a percentage of missing completely at random in only the first most important feature extracted before
+    most_important_features = feature_importance[:3]
+
+    for feature in most_important_features:
+        X.iloc[np.random.choice(X.index, int(X.shape[0] * percentage)), feature[1]] = X.iloc[0, feature[1]]
+
+    return X
+
+
+def pollute_less_important_features(X, y, percentage, seed=2023):
+    # Split the dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
+
+    # Train a regression model (Random Forest, for example)
+    model = RandomForestRegressor(random_state=seed)
+    model.fit(X_train, y_train)
+
+    # Get feature importance scores
+    importance = model.feature_importances_
+
+    #Order features by importance
+    feature_importance = sorted(zip(importance, range(X.shape[1])), reverse=True)
+
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(X, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # Introduce a percentage of missing completely at random in only the first most important feature extracted before
+    most_important_features = feature_importance[3:]
+
+    for feature in most_important_features:
+        X.iloc[np.random.choice(X.index, int(X.shape[0] * percentage)), feature[1]] = X.iloc[0, feature[1]]
+
+    return X
 
 def pollute_data_with_outliers(data, percentage, seed=2023):
     """
@@ -154,6 +215,9 @@ def pollute_data_with_constant_feature(data, percentage, seed=2023):
     data.iloc[np.random.choice(data.index, int(data.shape[0] * percentage)), random_col] = data.iloc[0, random_col]
 
     return data
+
+
+
 
 
 def pollute_data_mcar(data, percent_incomplete=0.2, seed=2023):
