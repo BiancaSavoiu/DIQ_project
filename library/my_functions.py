@@ -1,8 +1,86 @@
+import random
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
 from library.E_plot_results import plot
+
+
+def pollute_data_with_outliers(data, percentage, seed=2023):
+    """
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Data to be polluted
+    percentage : float
+        Percentage of outliers to be added
+    seed : int
+        Seed for the random generator
+
+    Returns
+    -------
+    data : pd.DataFrame
+        Polluted data
+    """
+    # Set the seed
+    np.random.seed(seed)
+    # Select the number of outliers to be added
+    n_outliers = int(len(data) * percentage)
+    # Select the indexes of the outliers
+    outliers_index = random.sample(range(0, len(data)), n_outliers)
+
+    # For each outlier, select a random feature and change its value
+    for j in outliers_index:
+        feature = random.randint(0, len(data.columns) - 1)
+        data.iloc[j, feature] = random.randint(0, 100)
+    return data
+
+
+def pollute_data_with_categorical_variables(data, number_of_variables):
+    """
+    Transform a random column of the input DataFrame into categorical by raging the values into `number_of_variables`
+    categories.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame.
+    number_of_variables : int
+        The number of categories to be generated.
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+    # Select one random column of `data`
+    column = data.sample(axis=1).columns[0]
+    # Transform the column into categorical by raging the values into `number_of_variables` categories
+    data[column] = pd.cut(data[column], number_of_variables, labels=False)
+    # Return the polluted data
+    return data
+
+
+def pollute_data_with_random_noise(data, noise_variance):
+    """
+    Add random noise to the input DataFrame.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame.
+    noise_variance : float
+        The variance of the random noise to be added to the DataFrame.
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+    if noise_variance > 0:
+        for column in data.columns:
+            data[column] = data[column] + np.random.normal(0, noise_variance, len(data))
+        return data
+    return None
 
 
 def pollute_data_for_distinctness_issues_among_different_features(data, percentage, seed=2023):
