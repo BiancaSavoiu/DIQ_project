@@ -3,8 +3,8 @@ import random
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
 
 from library.E_plot_results import plot
 
@@ -20,7 +20,7 @@ def pollute_most_important_features(X, y, percentage, seed=2023):
     # Get feature importance scores
     importance = model.feature_importances_
 
-    #Order features by importance
+    # Order features by importance
     feature_importance = sorted(zip(importance, range(X.shape[1])), reverse=True)
 
     # Set random seed for consistent behavior
@@ -38,6 +38,7 @@ def pollute_most_important_features(X, y, percentage, seed=2023):
 
     return X
 
+
 def pollute_less_important_features(X, y, percentage, seed=2023):
     # Split the dataset into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
@@ -49,7 +50,7 @@ def pollute_less_important_features(X, y, percentage, seed=2023):
     # Get feature importance scores
     importance = model.feature_importances_
 
-    #Order features by importance
+    # Order features by importance
     feature_importance = sorted(zip(importance, range(X.shape[1])), reverse=True)
 
     # Set random seed for consistent behavior
@@ -66,6 +67,7 @@ def pollute_less_important_features(X, y, percentage, seed=2023):
         X.iloc[np.random.choice(X.index, int(X.shape[0] * percentage)), feature[1]] = X.iloc[0, feature[1]]
 
     return X
+
 
 def pollute_data_with_outliers(data, percentage, seed=2023):
     """
@@ -143,6 +145,77 @@ def pollute_data_with_random_noise(data, noise_variance):
     return None
 
 
+def introduce_distinctness_to_dataframe(data, percentage, seed=2023):
+    """
+    Introduces distinctness to a randomly selected column in a pandas DataFrame.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame to be modified.
+    percentage : float
+        The target distinctness percentage, ranging from 0 to 1.
+        Zero means no change, and 1 means all values become unique.
+    seed : int
+        Seed for reproducibility. If provided, ensures consistent behavior.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A modified DataFrame with introduced distinctness in one of its columns.
+
+    Raises
+    ------
+    TypeError
+        If the input data is not a pandas.DataFrame.
+
+    Example
+    -------
+    >>> # Sample DataFrame
+    >>> df = pd.DataFrame({
+        'A': [1, 2, 3, 4, 5],
+        'B': [10, 20, 30, 40, 50]
+    })
+    >>> # Introduce 50% distinctness to a randomly selected column
+    >>> modified_df = introduce_distinctness_to_dataframe(df, 0.5, seed=42)
+    """
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # If the percentage is 0, return the original DataFrame
+    if percentage == 0:
+        return data
+
+    column = np.random.randint(data.shape[1])
+    arr = data[column].values
+    target_distinctness = 1 - percentage
+    # Calculate the number of unique values needed to achieve the target distinctness
+    target_unique_count = int(len(arr) * target_distinctness)
+    # Get the unique values from the original array
+    unique_values = list(set(arr))
+
+    # Repeat the unique values to achieve the target distinctness
+    repeated_values = []
+    while len(repeated_values) < len(arr) - target_unique_count:
+        repeated_values.append(random.choice(unique_values))
+
+    # Create the final array with the required distinctness
+    final_array = arr.copy()
+    random.shuffle(repeated_values)
+    for i in range(len(final_array)):
+        if final_array[i] not in repeated_values:
+            final_array[i] = np.random.choice(repeated_values)
+
+    # Replace the original column with the new one#
+    data[column] = final_array
+    # Return the polluted DataFrame
+    return data
+
+
 def pollute_data_for_distinctness_issues_among_different_features(data, percentage, seed=2023):
     """
     Take a random column and copy its first value in a percentage of the remaining rows, in a random way.
@@ -169,50 +242,24 @@ def pollute_data_for_distinctness_issues_among_different_features(data, percenta
     if not isinstance(data, pd.DataFrame):
         raise TypeError("Input data must be a pandas DataFrame")
 
-    # Select the half plus one of the columns in a random way
+    # Select a random column
     columns = np.random.choice(data.columns, data.shape[1] // 2 + 1)
 
-    # From each of the selected columns, chose a random row and copy its value in a percentage of the remaining rows
+    # Introduce distinctness to the selected columns
     for column in columns:
-        data.iloc[
-            np.random.choice(data.index, int(data.shape[0] * percentage * (1 + np.random.random() / 4))), column
-        ] = data.iloc[0, column]
+        # Chose a random percentage extracted from a normal distribution centered in percentage and small variance
+        percentage = np.random.normal(percentage, 0.1)
+
+        # The value of percentage must be between 0 and 1
+        if percentage < 0:
+            percentage = 0
+        elif percentage > 1:
+            percentage = 1
+
+        # Introduce distinctness to the selected column
+        data[column] = introduce_distinctness_to_dataframe(pd.DataFrame(data[column].values), percentage)
 
     # Return the polluted DataFrame
-    return data
-
-
-def pollute_data_with_constant_feature(data, percentage, seed=2023):
-    """
-    Take a random column and copy its first value in a percentage of the remaining rows, in a random way.
-
-    Parameters
-    ----------
-    data : pandas.DataFrame
-        The input DataFrame.
-    percentage : float
-        The percentage of constant feature to be introduced in the DataFrame.
-    seed : int
-        Determines random number generation for dataset creation. Pass an int for reproducible output across multiple
-        function calls.
-
-    Returns
-    -------
-    pandas.DataFrame
-        The input DataFrame with a constant feature.
-    """
-    # Set random seed for consistent behavior
-    np.random.seed(seed)
-
-    # Check if the input is a DataFrame, otherwise raise an error
-    if not isinstance(data, pd.DataFrame):
-        raise TypeError("Input data must be a pandas.DataFrame")
-
-    random_col = np.random.randint(data.shape[1])
-
-    # Take a random column and copy its first value in a percentage of the remaining rows, in a random way
-    data.iloc[np.random.choice(data.index, int(data.shape[0] * percentage)), random_col] = data.iloc[0, random_col]
-
     return data
 
 
@@ -353,6 +400,7 @@ def pollute_data_mar(data, feature_referenced, feature_dependent, seed=2023):
         if data[feature_referenced][element] > 100:
             data[feature_dependent][element] = np.nan
 
+
 def pollute_data_mnar(data, feature_MNAR, seed=2023):
     """
     Generate a random mask for incompleteness (MNAR) and introduce NaN values in the DataFrame according to the
@@ -366,10 +414,6 @@ def pollute_data_mnar(data, feature_MNAR, seed=2023):
     ----------
     data : pandas.DataFrame
         The input DataFrame.
-    feature_referenced : int
-        The feature for which we check a certain condition, to modify the completeness of another feature.
-    feature_dependent : int
-        The feature for which NaN values are introduced, identified by the number of the column.
     seed : int
         Determines random number generation for dataset creation. Pass an int
         for reproducible output across multiple function calls.
@@ -378,6 +422,8 @@ def pollute_data_mnar(data, feature_MNAR, seed=2023):
     -------
     pandas.DataFrame
         The input DataFrame with NaN values introduced according to the generated mask.
+    feature_MNAR : int
+        The feature for which NaN values are introduced, identified by the number of the column.
     """
 
     # Set random seed for consistent behavior
