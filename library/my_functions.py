@@ -389,8 +389,9 @@ def pollute_data_mnar(data, feature_MNAR, seed=2023):
 
     # Simulate a non-random incompleteness pattern based on the values of certain features
     for element in data.index:
-        if data[feature_MNAR][element] > 50 & data[feature_MNAR][element] < 150:
-            data[feature_MNAR][element] = np.nan
+        if data[feature_MNAR][element] > 50:
+            if data[feature_MNAR][element] < 150:
+                data[feature_MNAR][element] = np.nan
 
     return data
 
