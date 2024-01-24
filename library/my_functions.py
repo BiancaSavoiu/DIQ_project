@@ -1,3 +1,4 @@
+import heapq
 import random
 
 import numpy as np
@@ -9,143 +10,67 @@ from sklearn.model_selection import train_test_split
 from library.E_plot_results import plot
 
 
-def pollute_most_important_features(X, y, percentage, seed=2023):
+def pollute_most_important_features(data, target, percentage, seed=2023):
     # Split the dataset into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
+    data_train, data_test, y_train, y_test = train_test_split(data, target, test_size=0.2, random_state=seed)
 
     # Train a regression model (Random Forest, for example)
     model = RandomForestRegressor(random_state=seed)
-    model.fit(X_train, y_train)
+    model.fit(data_train, y_train)
 
     # Get feature importance scores
     importance = model.feature_importances_
 
     # Order features by importance
-    feature_importance = sorted(zip(importance, range(X.shape[1])), reverse=True)
+    feature_importance = sorted(zip(importance, range(data.shape[1])), reverse=True)
 
     # Set random seed for consistent behavior
     np.random.seed(seed)
 
     # Check if the input is a DataFrame, otherwise raise an error
-    if not isinstance(X, pd.DataFrame):
+    if not isinstance(data, pd.DataFrame):
         raise TypeError("Input data must be a pandas.DataFrame")
 
     # Introduce a percentage of missing completely at random in only the first most important feature extracted before
     most_important_features = feature_importance[:3]
 
     for feature in most_important_features:
-        X.iloc[np.random.choice(X.index, int(X.shape[0] * percentage)), feature[1]] = X.iloc[0, feature[1]]
+        data.iloc[np.random.choice(data.index, int(data.shape[0] * percentage)), feature[1]] = data.iloc[0, feature[1]]
 
-    return X
+    return data
 
 
-def pollute_less_important_features(X, y, percentage, seed=2023):
+def pollute_less_important_features(data, target, percentage, seed=2023):
     # Split the dataset into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
+    data_train, data_test, y_train, y_test = train_test_split(data, target, test_size=0.2, random_state=seed)
 
     # Train a regression model (Random Forest, for example)
     model = RandomForestRegressor(random_state=seed)
-    model.fit(X_train, y_train)
+    model.fit(data_train, y_train)
 
     # Get feature importance scores
     importance = model.feature_importances_
 
     # Order features by importance
-    feature_importance = sorted(zip(importance, range(X.shape[1])), reverse=True)
+    feature_importance = sorted(zip(importance, range(data.shape[1])), reverse=True)
 
     # Set random seed for consistent behavior
     np.random.seed(seed)
 
     # Check if the input is a DataFrame, otherwise raise an error
-    if not isinstance(X, pd.DataFrame):
+    if not isinstance(data, pd.DataFrame):
         raise TypeError("Input data must be a pandas.DataFrame")
 
     # Introduce a percentage of missing completely at random in only the first most important feature extracted before
     most_important_features = feature_importance[3:]
 
     for feature in most_important_features:
-        X.iloc[np.random.choice(X.index, int(X.shape[0] * percentage)), feature[1]] = X.iloc[0, feature[1]]
+        data.iloc[np.random.choice(data.index, int(data.shape[0] * percentage)), feature[1]] = data.iloc[0, feature[1]]
 
-    return X
-
-
-def pollute_data_with_outliers(data, percentage, seed=2023):
-    """
-    Parameters
-    ----------
-    data : pd.DataFrame
-        Data to be polluted
-    percentage : float
-        Percentage of outliers to be added
-    seed : int
-        Seed for the random generator
-
-    Returns
-    -------
-    data : pd.DataFrame
-        Polluted data
-    """
-    # Set the seed
-    np.random.seed(seed)
-    # Select the number of outliers to be added
-    n_outliers = int(len(data) * percentage)
-    # Select the indexes of the outliers
-    outliers_index = random.sample(range(0, len(data)), n_outliers)
-
-    # For each outlier, select a random feature and change its value
-    for j in outliers_index:
-        feature = random.randint(0, len(data.columns) - 1)
-        data.iloc[j, feature] = random.randint(0, 100)
     return data
 
 
-def pollute_data_with_categorical_variables(data, number_of_variables):
-    """
-    Transform a random column of the input DataFrame into categorical by raging the values into `number_of_variables`
-    categories.
-
-    Parameters
-    ----------
-    data : pandas.DataFrame
-        The input DataFrame.
-    number_of_variables : int
-        The number of categories to be generated.
-
-    Returns
-    -------
-    pandas.DataFrame
-    """
-    # Select one random column of `data`
-    column = data.sample(axis=1).columns[0]
-    # Transform the column into categorical by raging the values into `number_of_variables` categories
-    data[column] = pd.cut(data[column], number_of_variables, labels=False)
-    # Return the polluted data
-    return data
-
-
-def pollute_data_with_random_noise(data, noise_variance):
-    """
-    Add random noise to the input DataFrame.
-
-    Parameters
-    ----------
-    data : pandas.DataFrame
-        The input DataFrame.
-    noise_variance : float
-        The variance of the random noise to be added to the DataFrame.
-
-    Returns
-    -------
-    pandas.DataFrame
-    """
-    if noise_variance > 0:
-        for column in data.columns:
-            data[column] = data[column] + np.random.normal(0, noise_variance, len(data))
-        return data
-    return None
-
-
-def introduce_distinctness_to_dataframe(data, percentage, seed=2023):
+def pollution_first_second_third_experiments(data, percentage, seed=2023):
     """
     Introduces distinctness to a randomly selected column in a pandas DataFrame.
 
@@ -177,7 +102,7 @@ def introduce_distinctness_to_dataframe(data, percentage, seed=2023):
         'B': [10, 20, 30, 40, 50]
     })
     >>> # Introduce 50% distinctness to a randomly selected column
-    >>> modified_df = introduce_distinctness_to_dataframe(df, 0.5, seed=42)
+    >>> modified_df = pollution_first_second_third_experiments(df, 0.5, seed=42)
     """
     # Set random seed for consistent behavior
     np.random.seed(seed)
@@ -216,24 +141,39 @@ def introduce_distinctness_to_dataframe(data, percentage, seed=2023):
     return data
 
 
-def pollute_data_for_distinctness_issues_among_different_features(data, percentage, seed=2023):
+def pollution_fourth_experiment(data, percentage, seed=2023):
     """
-    Take a random column and copy its first value in a percentage of the remaining rows, in a random way.
+    Introduces distinctness to a subset of columns in a pandas DataFrame by modifying their values based on a random
+    percentage extracted from a normal distribution.
 
     Parameters
     ----------
     data : pandas.DataFrame
-        The input DataFrame.
+        The input DataFrame to be polluted with distinctness.
     percentage : float
-        The percentage of constant feature to be introduced in the DataFrame.
+        The central value around which the random percentages are generated. It represents the
+        percentage of distinctness to be introduced. The actual percentages are sampled from a normal
+        distribution centered around this value.
     seed : int
-        Determines random number generation for dataset creation.
-        Pass an int for reproducible output across multiple function calls.
+        Random seed for ensuring consistent behavior.
 
     Returns
     -------
     pandas.DataFrame
-        The input DataFrame with a constant feature.
+        The polluted DataFrame with introduced distinctness in selected columns.
+
+    Raises
+    ------
+    TypeError
+        If the input data is not a pandas DataFrame.
+
+    Example
+    -------
+    >>> # Create a DataFrame
+    >>> df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9]})
+
+    >>> # Introduce distinctness to the DataFrame
+    >>> polluted_df = pollution_fourth_experiment(df, seed=42, percentage=0.5)
     """
     # Set random seed for consistent behavior
     np.random.seed(seed)
@@ -257,9 +197,244 @@ def pollute_data_for_distinctness_issues_among_different_features(data, percenta
             percentage = 1
 
         # Introduce distinctness to the selected column
-        data[column] = introduce_distinctness_to_dataframe(pd.DataFrame(data[column].values), percentage)
+        data[column] = pollution_first_second_third_experiments(pd.DataFrame(data[column].values), percentage)
 
     # Return the polluted DataFrame
+    return data
+
+
+def pollution_fifth_experiment(data, noise_variance=0, seed=2023):
+    """
+    Pollutes a pandas DataFrame with random noise.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame to be polluted.
+    noise_variance : float
+        The variance of the random noise to be added. Default is 0.
+    seed : int
+        Seed for the random number generator to ensure consistent behavior. Default is 2023.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The polluted DataFrame with added random noise if noise_variance > 0,
+        otherwise returns the original DataFrame.
+
+    Raises
+    ------
+    TypeError
+        If the input data is not a pandas DataFrame.
+
+    Examples
+    --------
+    >>> # Create a sample DataFrame
+    >>> df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
+
+    >>> # Pollute the DataFrame with random noise
+    >>> polluted_df = pollution_fifth_experiment(df, noise_variance=0.1, seed=42)
+    """
+    # Set the seed for the random number generator to ensure reproducible results
+    np.random.seed(seed)
+
+    # Validate the input data type. If it's not a pandas DataFrame, raise a TypeError
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # If the noise_variance is greater than 0, add random noise to the DataFrame
+    if noise_variance > 0:
+        # Generate a 2D array of random numbers with the same shape as the DataFrame
+        noise = np.random.normal(0, noise_variance, data.shape)
+        # Add the generated noise to the DataFrame. This operation is done element-wise,
+        # so each element in the DataFrame has a different random number added to it.
+        data += noise
+
+    # Return the DataFrame after the noise addition operation
+    return data
+
+
+def pollution_sixth_experiment(data, number_of_variables, seed=2023):
+    """
+    Randomly transforms a column in a pandas DataFrame into categorical data by binning its values.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Input DataFrame to be modified.
+    number_of_variables : int
+        Number of categories to bin the selected column into.
+    seed : int
+        Seed for reproducibility. If not provided, randomness is not controlled.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Modified DataFrame with one randomly selected column transformed into categorical data.
+
+    Raises
+    ------
+    TypeError
+        If the input data is not a pandas DataFrame.
+
+    Example
+    -------
+    >>> # Create a sample DataFrame
+    >>> df = pd.DataFrame({'A': np.random.rand(5), 'B': np.random.rand(5)})
+
+    >>> # Call the function to transform a column into categorical data
+    >>> modified_df = pollution_sixth_experiment(df, number_of_variables=3, seed=42)
+    """
+    # Set the seed for the random number generator to ensure consistent results
+    np.random.seed(seed)
+
+    # Validate the input data type. If it's not a pandas DataFrame, raise a TypeError
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # Randomly select a column from the DataFrame
+    column = data.sample(axis=1).columns[0]
+    # Transform the selected column into categorical data by binning its values into 'number_of_variables' bins
+    # The labels=False argument means that the bin identifiers are returned instead of the bin edges
+    data[column] = pd.cut(data[column], number_of_variables, labels=False)
+    # Return the DataFrame with the transformed column
+    return data
+
+
+def pollution_seventh_experiment(data, percentage, seed=2023):
+    """
+    Introduces random outliers in a Pandas DataFrame.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame to which outliers will be introduced.
+    percentage : float
+        The percentage of data points to be modified as outliers.
+        Defaults to 0.01 (1% of data points).
+    seed : int
+        Seed for reproducibility. If provided, ensures consistent random outcomes.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A DataFrame with randomly introduced outliers.
+
+    Raises
+    ------
+    TypeError
+        If the input data is not a pandas DataFrame.
+
+    Example
+    -------
+    >>> df = pd.DataFrame(np.random.rand(100, 5), columns=['A', 'B', 'C', 'D', 'E'])
+    >>> data_with_outliers = pollution_seventh_experiment(df, percentage=0.05, seed=42)
+    """
+    # Set the seed for the random number generator to ensure consistent results
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # Calculate the number of outliers based on the percentage provided
+    n_outliers = int(len(data) * percentage)
+    # Randomly select indices for the outliers
+    outliers_index = np.random.choice(data.index, size=n_outliers, replace=False)
+
+    # For each outlier index
+    for i in outliers_index:
+        # Randomly select a feature (column)
+        feature = np.random.randint(0, len(data.columns))
+        # Replace the value at the selected index and feature with a random integer between 0 and 100
+        np.put(data.iloc[:, feature].values, [i], [np.random.randint(0, 100)])
+
+    # Return the DataFrame with introduced outliers
+    return data
+
+
+def pollution_eighth_experiment(data, percentage, seed=2023):
+    """
+    Introduces distinctness or 'pollution' to two randomly selected columns of a pandas DataFrame.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        The input DataFrame to be modified.
+    percentage : float
+        The percentage of distinctness to be introduced. Should be a float between 0 and 1.
+    seed : int
+        Seed for reproducibility. If provided, sets the random seed for consistent behavior.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A modified DataFrame with introduced pollution.
+
+    Raises
+    ------
+    TypeError
+        If the input 'data' is not a pandas DataFrame.
+
+    Example
+    -------
+    >>> # Create a sample DataFrame
+    >>> df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9]})
+    >>> # Introduce 20% pollution to the DataFrame columns
+    >>> polluted_df = pollution_eighth_experiment(df, percentage=0.2, seed=42)
+    """
+    # Set random seed for consistent behavior
+    np.random.seed(seed)
+
+    # Check if the input is a DataFrame, otherwise raise an error
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # If the percentage is 0, return the original DataFrame
+    if percentage == 0:
+        return data
+
+    # Select two distinct columns from the DataFrame.
+    # 'replace=False' ensures that the same column is not selected twice.
+    column_high, column_low = np.random.choice(data.columns, 2, replace=False)
+    # Call the 'pollution_first_second_third_experiments' function on the first selected column.
+    # This function introduces distinctness to the column based on the provided percentage.
+    data[column_high] = pollution_first_second_third_experiments(data[column_high], percentage)
+    # Call the 'pollution_first_second_third_experiments' function on the second selected column.
+    # This function introduces distinctness to the column based on the remaining percentage (1 - percentage).
+    data[column_low] = pollution_first_second_third_experiments(data[column_low], 1 - percentage)
+    # Return the modified DataFrame
+    return data
+
+
+def pollution_ninth_tenth_experiments(data, target, percentage, informative=True, seed=2023):
+    # Initialize the random number generator with a specific seed to ensure reproducibility of results
+    np.random.seed(seed)
+
+    # Validate that the input data is a pandas DataFrame. If not, raise a TypeError
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input data must be a pandas.DataFrame")
+
+    # Divide the dataset into two parts: a training set and a testing set
+    data_train, data_test, y_train, y_test = train_test_split(data, target, test_size=0.2, random_state=seed)
+    # Instantiate and train a RandomForestRegressor model using the training data
+    model = RandomForestRegressor(random_state=seed)
+    model.fit(data_train, y_train)
+    # Extract the importance of each feature from the trained model
+    importance = model.feature_importances_
+
+    # Depending on the 'informative' flag, select the top 3 most or least important features
+    if informative:
+        features_of_interest = heapq.nlargest(3, zip(importance, range(data.shape[1])))
+    else:
+        features_of_interest = heapq.nsmallest(3, zip(importance, range(data.shape[1])))
+
+    # For each selected feature, apply the 'pollution_first_second_third_experiments' function
+    # This function introduces a certain percentage of distinctness to the feature
+    for _, feature in features_of_interest:
+        data[feature] = pollution_first_second_third_experiments(pd.DataFrame(data[feature].values), percentage)
+
+    # Return the DataFrame after the pollution process
     return data
 
 
@@ -401,7 +576,7 @@ def pollute_data_mar(data, feature_referenced, feature_dependent, seed=2023):
             data[feature_dependent][element] = np.nan
 
 
-def pollute_data_mnar(data, feature_MNAR, seed=2023):
+def pollute_data_mnar(data, feature_mnar, seed=2023):
     """
     Generate a random mask for incompleteness (MNAR) and introduce NaN values in the DataFrame according to the
     generated mask.
@@ -417,6 +592,8 @@ def pollute_data_mnar(data, feature_MNAR, seed=2023):
     seed : int
         Determines random number generation for dataset creation. Pass an int
         for reproducible output across multiple function calls.
+    feature_mnar : int
+        The feature for which NaN values are introduced, identified by the number of the column.
 
     Returns
     -------
@@ -425,7 +602,6 @@ def pollute_data_mnar(data, feature_MNAR, seed=2023):
     feature_MNAR : int
         The feature for which NaN values are introduced, identified by the number of the column.
     """
-
     # Set random seed for consistent behavior
     np.random.seed(seed)
 
@@ -435,9 +611,9 @@ def pollute_data_mnar(data, feature_MNAR, seed=2023):
 
     # Simulate a non-random incompleteness pattern based on the values of certain features
     for element in data.index:
-        if data[feature_MNAR][element] > 50:
-            if data[feature_MNAR][element] < 150:
-                data[feature_MNAR][element] = np.nan
+        if data[feature_mnar][element] > 50:
+            if data[feature_mnar][element] < 150:
+                data[feature_mnar][element] = np.nan
 
     return data
 
