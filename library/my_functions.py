@@ -118,25 +118,21 @@ def pollution_first_second_third_experiments(data, percentage, seed=2023):
     column = np.random.randint(data.shape[1])
     arr = data[column].values
     target_distinctness = 1 - percentage
-    # Calculate the number of unique values needed to achieve the target distinctness
-    target_unique_count = int(len(arr) * target_distinctness)
+    arr_len = len(arr)
     # Get the unique values from the original array
-    unique_values = list(set(arr))
+    n_unique_values = len(list(set(arr)))
 
     # Repeat the unique values to achieve the target distinctness
-    repeated_values = []
-    while len(repeated_values) < len(arr) - target_unique_count:
-        repeated_values.append(random.choice(unique_values))
-
-    # Create the final array with the required distinctness
-    final_array = arr.copy()
-    random.shuffle(repeated_values)
-    for i in range(len(final_array)):
-        if final_array[i] not in repeated_values:
-            final_array[i] = np.random.choice(repeated_values)
+    while n_unique_values / arr_len > target_distinctness:
+        # Chose a random value from arr
+        random_value = np.random.choice(arr)
+        # Chose a random index from repeated_values
+        random_index = np.random.choice(len(arr))
+        # Replace the value at the random index with the random value
+        arr[random_index] = random_value
 
     # Replace the original column with the new one#
-    data[column] = final_array
+    data[column] = arr.copy()
     # Return the polluted DataFrame
     return data
 
